@@ -32,8 +32,8 @@ class Robot_player(Robot):
         self.evaluations = evaluations
         self.it_per_evaluation = it_per_evaluation
         # new variables
-        self.param = np.random.randint( -1, 2, size=(18, ) )
-        self.score = np.empty( shape=(3, self.it_per_evaluation) )
+        self.param = np.random.randint( -1, 2, size=(8, ) )
+        self.score = [0,0,0]
         self.best_robot_config = None
         self.arena_size = arena_size
         ###############
@@ -54,9 +54,9 @@ class Robot_player(Robot):
         sensors_nda = np.array(sensors)
 
         # fonction de contrôle (qui dépend des entrées sensorielles, et des paramètres)
-        translation = np.tanh ( self.param[0] + self.param[1:9] @  sensors_nda )
-        rotation = np.tanh ( self.param[9] + self.param[10:] @  sensors_nda )
-        self.score[ self.trial % 3 ][ self.iteration % self.it_per_evaluation ] = translation * (1 - np.abs(rotation)) * np.min(sensors_nda) * np.max(sensors_nda)
+        translation = math.tanh ( self.param[0] + self.param[1] * sensors[sensor_front_left] + self.param[2] * sensors[sensor_front] + self.param[3] * sensors[sensor_front_right] )
+        rotation = math.tanh ( self.param[4] + self.param[5] * sensors[sensor_front_left] + self.param[6] * sensors[sensor_front] + self.param[7] * sensors[sensor_front_right] )
+        self.score[ self.trial % 3 ] = self.log_sum_of_translation + (1 - np.abs(self.log_sum_of_rotation)) 
 
         self.iteration = self.iteration + 1  
 
@@ -71,7 +71,7 @@ class Robot_player(Robot):
                     best_score, _, _ = self.best_robot_config
                     if best_score < current_score:
                         self.best_robot_config = (current_score, self.param, self.trial)
-                self.param = np.random.randint( -1, 2, size=(18, ) )
+                self.param = np.random.randint( -1, 2, size=(8, ) )
                 best_score, best_param, trial_found = self.best_robot_config
                 print(f"the best robot found : {np.array2string(best_param, separator=', ')} with score = {best_score} found in try number {trial_found}")
                 print ("Trying strategy no.",self.trial)
@@ -81,3 +81,4 @@ class Robot_player(Robot):
             return 0, 0, True # ask for reset     
 
         return translation, rotation, False
+
